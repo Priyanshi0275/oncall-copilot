@@ -1,0 +1,5 @@
+venv/
+.env
+.chroma/
+.git/
+__pycache__/

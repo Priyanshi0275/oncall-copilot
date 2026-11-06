@@ -1,0 +1,9 @@
+services:
+  shop:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./app.log:/app/app.log

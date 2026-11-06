@@ -1,14 +1,15 @@
 import json
 import os
 
-from groq import Groq
 from dotenv import load_dotenv
+from groq import BadRequestError, Groq
 
-load_dotenv()
 from agent.actions import ALLOWED_ACTIONS, execute
 from agent.approval import ask_approval
 from agent.rag import search_runbooks
 from agent.tools import current_time, get_recent_deploys, read_logs
+
+load_dotenv()
 
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
@@ -42,12 +43,12 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "read_logs",
-            "description": "Return application log lines from the last N minutes.",
+            "description": "Return application log lines from the last N minutes. Both arguments are optional.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "last_n": {"type": "integer"},
-                    "minutes": {"type": "integer"},
+                    "last_n": {"type": ["integer", "null"]},
+                    "minutes": {"type": ["integer", "null"]},
                 },
                 "required": [],
             },
@@ -85,15 +86,38 @@ FUNCTIONS = {
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
+def _chat(messages):
+    """Call the model, retrying when it produces a malformed tool call."""
+    for attempt in range(3):
+        try:
+            return client.chat.completions.create(
+                model=MODEL, messages=messages, tools=TOOLS, tool_choice="auto"
+            )
+        except BadRequestError:
+            if attempt == 2:
+                raise
+
+
+def _run_tool(name: str, raw_arguments: str) -> str:
+    """Run one tool call safely and always return a string."""
+    func = FUNCTIONS.get(name)
+    if func is None:
+        return f"Unknown tool: {name}"
+    try:
+        args = json.loads(raw_arguments or "{}")
+        args = {k: v for k, v in args.items() if v is not None}
+        return func(**args)
+    except Exception as exc:  # report the failure to the model instead of crashing
+        return f"Tool {name} failed: {exc}"
+
+
 def diagnose(alert: str) -> str:
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": alert},
     ]
     for _ in range(6):  # safety cap on tool-call rounds
-        response = client.chat.completions.create(
-            model=MODEL, messages=messages, tools=TOOLS, tool_choice="auto"
-        )
+        response = _chat(messages)
         msg = response.choices[0].message
         if not msg.tool_calls:
             return msg.content
@@ -115,8 +139,7 @@ def diagnose(alert: str) -> str:
             }
         )
         for tc in msg.tool_calls:
-            args = json.loads(tc.function.arguments or "{}")
-            result = FUNCTIONS[tc.function.name](**args)
+            result = _run_tool(tc.function.name, tc.function.arguments)
             messages.append(
                 {"role": "tool", "tool_call_id": tc.id, "content": result}
             )
@@ -137,7 +160,7 @@ if __name__ == "__main__":
 
     action = parse_action(diagnosis)
     if action not in ALLOWED_ACTIONS:
-        print("\nNo action proposed. Human investigation needed.")
+        print("\nNo action proposed. Nothing was changed.")
     elif ask_approval(action):
         print(execute(action))
     else:
