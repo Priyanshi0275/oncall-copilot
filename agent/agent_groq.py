@@ -3,7 +3,7 @@ import os
 import time
 
 from dotenv import load_dotenv
-from groq import BadRequestError, Groq, RateLimitError
+from groq import APIStatusError, BadRequestError, Groq, RateLimitError
 
 from agent.actions import ALLOWED_ACTIONS, execute
 from agent.approval import ask_approval
@@ -14,6 +14,7 @@ load_dotenv()
 
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 MAX_ROUNDS = 10
+MAX_TOOL_CHARS = 3000  # cap every tool result so one big log cannot blow the token budget
 FAILED_PREFIX = "AGENT_FAILED"
 
 SYSTEM_PROMPT = """You are an on-call engineer's assistant.
@@ -89,19 +90,36 @@ FUNCTIONS = {
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
+def _approx_tokens(messages) -> int:
+    return len(json.dumps(messages)) // 4
+
+
 def _chat(messages):
     """Call the model, retrying on malformed output and rate limits."""
+    last_error = None
     for attempt in range(4):
         try:
             return client.chat.completions.create(
-                model=MODEL, messages=messages, tools=TOOLS, tool_choice="auto"
+                model=MODEL,
+                messages=messages,
+                tools=TOOLS,
+                tool_choice="auto",
+                max_tokens=2000,
+                extra_body={"reasoning_effort": "low"},
             )
-        except RateLimitError:
+        except RateLimitError as exc:
+            last_error = exc
+            print(f"    rate limited, waiting 15s: {exc}")
             time.sleep(15)
-        except BadRequestError:
+        except BadRequestError as exc:
+            last_error = exc
             if attempt == 3:
                 raise
-    raise RuntimeError("Model call failed after retries")
+        except APIStatusError as exc:
+            if exc.status_code == 413:
+                print(f"    request too large, about {_approx_tokens(messages)} tokens by my estimate")
+            raise
+    raise RuntimeError(f"Model call failed after retries: {last_error}")
 
 
 def _run_tool(name: str, raw_arguments: str) -> str:
@@ -112,7 +130,7 @@ def _run_tool(name: str, raw_arguments: str) -> str:
     try:
         args = json.loads(raw_arguments or "{}")
         args = {k: v for k, v in args.items() if v is not None}
-        return func(**args)
+        return str(func(**args))[:MAX_TOOL_CHARS]
     # Report the failure to the model instead of crashing the agent.
     except Exception as exc:  # noqa: BLE001
         return f"Tool {name} failed: {exc}"

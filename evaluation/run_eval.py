@@ -2,6 +2,7 @@ import argparse
 import json
 import time
 from pathlib import Path
+import os
 
 import requests
 
@@ -134,8 +135,8 @@ def main() -> None:
     print(f"\nOverall action accuracy: {correct}/{total} ({100 * correct / total:.0f}%)")
     print(f"Wrong rollbacks proposed: {wrong}")
 
-    RESULTS_FILE.write_text(json.dumps(raw, indent=2))
-    print(f"Raw results saved to {RESULTS_FILE}")
+    MODEL_NAME = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").replace("/", "_")
+    RESULTS_FILE = Path(f"evaluation/results_{MODEL_NAME}.json")
 
 
 if __name__ == "__main__":
