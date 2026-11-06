@@ -86,16 +86,24 @@ FUNCTIONS = {
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
+import time  # file ke upar imports mein jodo
+
+from groq import BadRequestError, RateLimitError  # purani groq import line replace karo
+
+
 def _chat(messages):
-    """Call the model, retrying when it produces a malformed tool call."""
-    for attempt in range(3):
+    """Call the model, retrying on malformed output and rate limits."""
+    for attempt in range(4):
         try:
             return client.chat.completions.create(
                 model=MODEL, messages=messages, tools=TOOLS, tool_choice="auto"
             )
+        except RateLimitError:
+            time.sleep(15)
         except BadRequestError:
-            if attempt == 2:
+            if attempt == 3:
                 raise
+    raise RuntimeError("Model call failed after retries")
 
 
 def _run_tool(name: str, raw_arguments: str) -> str:

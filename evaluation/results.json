@@ -1,0 +1,178 @@
+[
+  {
+    "case": "bad_deploy",
+    "run": 1,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 34.3,
+    "diagnosis": "Agent stopped: too many tool-call rounds."
+  },
+  {
+    "case": "bad_deploy",
+    "run": 2,
+    "action": "rollback",
+    "runbooks": [
+      "db_pool_exhausted"
+    ],
+    "seconds": 61.2,
+    "diagnosis": "ROOT CAUSE: The checkout endpoint is failing because the database connection pool has been exhausted, likely due to leaked connections introduced in the recent deployment of version\u202fv1.1.  \nEVIDENCE:  \n- 2026-11-06 17:26:53,388 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n- 2026-11-06 17:26:53,398 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n- 2026-11-06 17:26:53,406 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \nRUNBOOK: db_pool_exhausted  \nSUGGESTED FIX: Roll back to the previous version.  \nACTION: rollback  \nCONFIDENCE: high"
+  },
+  {
+    "case": "bad_deploy",
+    "run": 3,
+    "action": "rollback",
+    "runbooks": [
+      "db_pool_exhausted"
+    ],
+    "seconds": 97.6,
+    "diagnosis": "ROOT CAUSE: The new deployment (v1.1) introduced a bug that caused the database connection pool to become exhausted, leading to HTTP 500 errors on `/checkout`.  \nEVIDENCE:  \n```\n2026-11-06 17:27:57,628 ERROR checkout failed: database connection pool exhausted (version=v1.1)\n2026-11-06 17:27:57,638 ERROR checkout failed: database connection pool exhausted (version=v1.1)\n2026-11-06 17:27:57,646 ERROR checkout failed: database connection pool exhausted (version=v1.1)\n2026-11-06 17:27:57,608 WARNING deployed new version v1.1\n```  \nRUNBOOK: db_pool_exhausted  \nSUGGESTED FIX: Roll back to the previous version of the service.  \nACTION: rollback  \nCONFIDENCE: high"
+  },
+  {
+    "case": "bad_deploy",
+    "run": 4,
+    "action": "rollback",
+    "runbooks": [
+      "db_pool_exhausted"
+    ],
+    "seconds": 76.4,
+    "diagnosis": "ROOT CAUSE: The checkout endpoint is failing with 500 errors because the database connection pool is exhausted after the recent deployment of version\u202fv1.1.  \nEVIDENCE:  \n- 2026-11-06 17:29:38,262 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n- 2026-11-06 17:29:38,271 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n- 2026-11-06 17:29:38,281 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n\nRUNBOOK: db_pool_exhausted  \nSUGGESTED FIX: Roll back to the previous version.  \nACTION: rollback  \nCONFIDENCE: high"
+  },
+  {
+    "case": "bad_deploy",
+    "run": 5,
+    "action": "rollback",
+    "runbooks": [
+      "db_pool_exhausted"
+    ],
+    "seconds": 70.5,
+    "diagnosis": "ROOT CAUSE: The new deployment (v1.1) caused database connection pool exhaustion, leading to HTTP\u202f500 errors on /checkout.  \n\nEVIDENCE:  \n2026-11-06 17:30:57,718 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n2026-11-06 17:30:57,725 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n2026-11-06 17:30:57,733 ERROR checkout failed: database connection pool exhausted (version=v1.1)  \n2026-11-06 17:30:57,710 WARNING deployed new version v1.1  \n\nRUNBOOK: db_pool_exhausted  \n\nSUGGESTED FIX: Roll back to the previous version.  \n\nACTION: rollback  \n\nCONFIDENCE: high"
+  },
+  {
+    "case": "memory_leak",
+    "run": 1,
+    "action": "none",
+    "runbooks": [
+      "memory_leak"
+    ],
+    "seconds": 16.8,
+    "diagnosis": "ROOT CAUSE: The container is being OOMKilled due to memory usage climbing to 94% and never dropping.\n\nEVIDENCE:\n2026-11-06 17:32:11,263 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n2026-11-06 17:32:11,271 WARNING memory usage at 94 percent and still climbing (version=v1.0)\n2026-11-06 17:32:11,272 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n2026-11-06 17:32:11,279 WARNING memory usage at 94 percent and still climbing (version=v1.0)\n2026-11-06 17:32:11,280 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n\nRUNBOOK: memory_leak\n\nSUGGESTED FIX: Restart the service to restore capacity (temporary).\n\nACTION: none\n\nCONFIDENCE: high"
+  },
+  {
+    "case": "memory_leak",
+    "run": 2,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 73.9,
+    "diagnosis": "Agent stopped: too many tool-call rounds."
+  },
+  {
+    "case": "memory_leak",
+    "run": 3,
+    "action": "none",
+    "runbooks": [
+      "memory_leak"
+    ],
+    "seconds": 23.2,
+    "diagnosis": "ROOT CAUSE: The container is being OOMKilled because memory usage is climbing to 94\u202f% and never dropping.\n\nEVIDENCE:  \n- `2026-11-06 17:33:48,140 ERROR container OOMKilled: out of memory, restarting (version=v1.0)`  \n- `2026-11-06 17:33:48,148 WARNING memory usage at 94 percent and still climbing (version=v1.0)`  \n- `2026-11-06 17:33:48,149 ERROR container OOMKilled: out of memory, restarting (version=v1.0)`  \n- `2026-11-06 17:33:48,157 WARNING memory usage at 94 percent and still climbing (version=v1.0)`  \n- `2026-11-06 17:33:48,158 ERROR container OOMKilled: out of memory, restarting (version=v1.0)`\n\nRUNBOOK: memory_leak\n\nSUGGESTED FIX: Restart the service to restore capacity (temporary).  \n\nACTION: none  \n\nCONFIDENCE: high"
+  },
+  {
+    "case": "memory_leak",
+    "run": 4,
+    "action": "none",
+    "runbooks": [
+      "memory_leak"
+    ],
+    "seconds": 70.5,
+    "diagnosis": "ROOT CAUSE: Container is being OOMKilled due to a memory leak, causing the service to restart continuously.  \nEVIDENCE:  \n- 2026-11-06 17:34:14,374 ERROR container OOMKilled: out of memory, restarting (version=v1.0)  \n- 2026-11-06 17:34:14,382 WARNING memory usage at 94 percent and still climbing (version=v1.0)  \n- 2026-11-06 17:34:14,383 ERROR container OOMKilled: out of memory, restarting (version=v1.0)  \n- 2026-11-06 17:34:14,391 WARNING memory usage at 94 percent and still climbing (version=v1.0)  \n- 2026-11-06 17:34:14,392 ERROR container OOMKilled: out of memory, restarting (version=v1.0)  \n\nRUNBOOK: memory_leak  \n\nSUGGESTED FIX: Restart the service to restore capacity (temporary).  \n\nACTION: none  \n\nCONFIDENCE: high"
+  },
+  {
+    "case": "memory_leak",
+    "run": 5,
+    "action": "none",
+    "runbooks": [
+      "memory_leak"
+    ],
+    "seconds": 25.8,
+    "diagnosis": "ROOT CAUSE: The container is being OOMKilled due to memory usage climbing to 94\u202f% and not dropping, causing repeated restarts.  \nEVIDENCE:  \n```\n2026-11-06 17:35:27,911 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n2026-11-06 17:35:27,922 WARNING memory usage at 94 percent and still climbing (version=v1.0)\n2026-11-06 17:35:27,924 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n2026-11-06 17:35:27,935 WARNING memory usage at 94 percent and still climbing (version=v1.0)\n2026-11-06 17:35:27,936 ERROR container OOMKilled: out of memory, restarting (version=v1.0)\n```  \nRUNBOOK: memory_leak  \nSUGGESTED FIX: Restart the service to restore capacity (temporary).  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "high_latency",
+    "run": 2,
+    "action": "none",
+    "runbooks": [
+      "high_latency"
+    ],
+    "seconds": 43.2,
+    "diagnosis": "ROOT CAUSE: The /checkout endpoint is experiencing high latency.  \nEVIDENCE:  \n```\n2026-11-06 17:38:05,204 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n2026-11-06 17:38:05,212 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n```  \nRUNBOOK: high_latency  \nSUGGESTED FIX: Scale up the number of replicas to handle the increased load.  \nACTION: none  \nCONFIDENCE: medium"
+  },
+  {
+    "case": "high_latency",
+    "run": 3,
+    "action": "none",
+    "runbooks": [
+      "high_latency"
+    ],
+    "seconds": 64.3,
+    "diagnosis": "ROOT CAUSE: `/checkout` is experiencing unusually high response times (4800\u202fms vs 120\u202fms).  \nEVIDENCE:  \n```\n2026-11-06 17:38:51,436 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n2026-11-06 17:38:51,446 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n```  \nRUNBOOK: high_latency  \nSUGGESTED FIX: Scale up the number of replicas to handle a potential traffic spike.  \nACTION: none  \nCONFIDENCE: medium"
+  },
+  {
+    "case": "high_latency",
+    "run": 4,
+    "action": "none",
+    "runbooks": [
+      "high_latency"
+    ],
+    "seconds": 61.9,
+    "diagnosis": "ROOT CAUSE: Slow `/checkout` response times indicating high latency.  \nEVIDENCE:  \n```\n2026-11-06 17:39:58,838 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n2026-11-06 17:39:58,871 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)\n```  \nRUNBOOK: high_latency  \nSUGGESTED FIX: Scale up replicas to handle increased load.  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "high_latency",
+    "run": 5,
+    "action": "none",
+    "runbooks": [
+      "high_latency"
+    ],
+    "seconds": 21.7,
+    "diagnosis": "ROOT CAUSE: The /checkout endpoint is experiencing unusually high latency, likely due to a traffic spike.  \nEVIDENCE:  \n```\n2026-11-06 17:41:03,844 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)  \n2026-11-06 17:41:03,852 WARNING slow response: /checkout took 4800 ms, normal is 120 ms (version=v1.0)  \n```  \nRUNBOOK: high_latency  \nSUGGESTED FIX: Scale up the number of replicas to handle the increased request volume.  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "healthy_false_alarm",
+    "run": 1,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 7.1,
+    "diagnosis": "ROOT CAUSE: The /checkout endpoint is not experiencing errors; the recent logs show successful executions.  \nEVIDENCE:  \n```\n2026-11-06 17:41:28,617 INFO checkout ok (version=v1.0)  \n2026-11-06 17:41:28,626 INFO checkout ok (version=v1.0)  \n```  \nRUNBOOK: None (no relevant runbook needed).  \nSUGGESTED FIX: None.  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "healthy_false_alarm",
+    "run": 2,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 58.0,
+    "diagnosis": "ROOT CAUSE: No error logs detected for `/checkout`; the service appears healthy.  \nEVIDENCE:  \n```\n2026-11-06 17:41:38,780 INFO checkout ok (version=v1.0)\n2026-11-06 17:41:38,788 INFO checkout ok (version=v1.0)\n```  \nRUNBOOK: none found.  \nSUGGESTED FIX: none.  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "healthy_false_alarm",
+    "run": 3,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 7.4,
+    "diagnosis": "ROOT CAUSE: No issues detected with /checkout.  \nEVIDENCE:  \n```\n2026-11-06 17:42:39,809 INFO checkout ok (version=v1.0)  \n2026-11-06 17:42:39,818 INFO checkout ok (version=v1.0)  \n```  \nRUNBOOK: No matching runbook found for this scenario.  \nSUGGESTED FIX: None.  \nACTION: none  \nCONFIDENCE: high"
+  },
+  {
+    "case": "healthy_false_alarm",
+    "run": 4,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 25.6,
+    "diagnosis": "ROOT CAUSE: No recent errors were found for /checkout; the service appears healthy.  \nEVIDENCE:  \n```\n2026-11-06 17:42:50,272 INFO checkout ok (version=v1.0)  \n2026-11-06 17:42:50,279 INFO checkout ok (version=v1.0)  \n```  \nRUNBOOK: No applicable runbook found.  \nSUGGESTED FIX: None.  \nACTION: none  \nCONFIDENCE: medium"
+  },
+  {
+    "case": "healthy_false_alarm",
+    "run": 5,
+    "action": "none",
+    "runbooks": [],
+    "seconds": 14.4,
+    "diagnosis": "ROOT CAUSE: No errors were observed for the /checkout endpoint in the most recent log entries, indicating the service is operating normally.  \nEVIDENCE:  \n```\n2026-11-06 17:43:18,926 INFO checkout ok (version=v1.0)\n2026-11-06 17:43:18,934 INFO checkout ok (version=v1.0)\n```  \nRUNBOOK: No matching runbook found.  \nSUGGESTED FIX: None.  \nACTION: none  \nCONFIDENCE: high"
+  }
+]

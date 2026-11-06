@@ -19,7 +19,7 @@ def index_runbooks() -> int:
     return len(files)
 
 
-def search_runbooks(query: str, top_k: int = 2) -> str:
+def search_runbooks(query: str, top_k: int =1) -> str:
     """Return the most relevant runbooks for a problem description."""
     if _collection.count() == 0:
         index_runbooks()
