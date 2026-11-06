@@ -96,6 +96,10 @@ def main() -> None:
                 continue
             seconds.append(elapsed)
             action = parse_action(text)
+            if action == "error":
+                errors += 1
+                print(f"  {case['name']} run {i + 1}: AGENT ERROR")
+                continue
             runbooks = cited_runbooks(text)
             good_action = action == case["expected_action"]
             if case["expected_runbooks"]:
@@ -111,7 +115,7 @@ def main() -> None:
                         "diagnosis": text})
             print(f"  {case['name']} run {i + 1}: action={action} "
                   f"runbooks={sorted(runbooks)} ({elapsed:.1f}s)")
-            time.sleep(2)  # stay under the free tier rate limit
+            time.sleep(20)  # stay under the free tier rate limit
         rows.append((case["name"], args.runs, action_ok, runbook_ok,
                      wrong_rollbacks, errors,
                      sum(seconds) / len(seconds) if seconds else 0.0))

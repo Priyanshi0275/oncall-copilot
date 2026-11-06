@@ -50,12 +50,14 @@ def post_incident(alert: str) -> None:
             }
         )
     else:
+        if action == "error":
+            note = ":warning: The agent could not finish. A human needs to investigate."
+        else:
+            note = "No action proposed. Nothing was changed."
         blocks.append(
             {
                 "type": "context",
-                "elements": [
-                    {"type": "mrkdwn", "text": "No action proposed. Nothing was changed."}
-                ],
+                "elements": [{"type": "mrkdwn", "text": note}],
             }
         )
 

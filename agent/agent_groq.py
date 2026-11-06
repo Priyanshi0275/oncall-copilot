@@ -1,8 +1,9 @@
 import json
 import os
+import time
 
 from dotenv import load_dotenv
-from groq import BadRequestError, Groq
+from groq import BadRequestError, Groq, RateLimitError
 
 from agent.actions import ALLOWED_ACTIONS, execute
 from agent.approval import ask_approval
@@ -12,12 +13,14 @@ from agent.tools import current_time, get_recent_deploys, read_logs
 load_dotenv()
 
 MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+MAX_ROUNDS = 10
+FAILED_PREFIX = "AGENT_FAILED"
 
 SYSTEM_PROMPT = """You are an on-call engineer's assistant.
 When given an alert, investigate using the tools provided.
-Always check the logs and the recent deploys first, then search the runbooks.
+Call current_time, read_logs and get_recent_deploys together in your first step, then search the runbooks.
 Base your suggested fix on the runbook, not on your own guesses.
-Call current_time first. Only treat errors from the last 10 minutes as an active incident.
+Only treat errors from the last 10 minutes as an active incident.
 If the recent logs show no errors, report that the service looks healthy and use ACTION: none.
 Never propose rollback based on old errors that are followed by a rollback or by successful requests.
 Reply in this format:
@@ -35,7 +38,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "current_time",
-            "description": "Return the current local time. Call this first.",
+            "description": "Return the current local time.",
             "parameters": {"type": "object", "properties": {}},
         },
     },
@@ -86,11 +89,6 @@ FUNCTIONS = {
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
-import time  # file ke upar imports mein jodo
-
-from groq import BadRequestError, RateLimitError  # purani groq import line replace karo
-
-
 def _chat(messages):
     """Call the model, retrying on malformed output and rate limits."""
     for attempt in range(4):
@@ -125,11 +123,11 @@ def diagnose(alert: str) -> str:
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": alert},
     ]
-    for _ in range(6):  # safety cap on tool-call rounds
+    for _ in range(MAX_ROUNDS):
         response = _chat(messages)
         msg = response.choices[0].message
         if not msg.tool_calls:
-            return msg.content
+            return msg.content or f"{FAILED_PREFIX}: the model returned an empty answer."
         messages.append(
             {
                 "role": "assistant",
@@ -152,15 +150,18 @@ def diagnose(alert: str) -> str:
             messages.append(
                 {"role": "tool", "tool_call_id": tc.id, "content": result}
             )
-    return "Agent stopped: too many tool-call rounds."
+    return f"{FAILED_PREFIX}: too many tool-call rounds, no diagnosis produced."
 
 
 def parse_action(text: str) -> str:
+    """Return rollback, none, or error when the agent itself failed."""
+    if text.startswith(FAILED_PREFIX):
+        return "error"
     for line in text.splitlines():
         cleaned = line.replace("*", "").strip()
         if cleaned.upper().startswith("ACTION:"):
             return cleaned.split(":", 1)[1].strip().lower()
-    return "none"
+    return "error"  # no ACTION line means the answer is malformed
 
 
 if __name__ == "__main__":
@@ -168,7 +169,9 @@ if __name__ == "__main__":
     print(diagnosis)
 
     action = parse_action(diagnosis)
-    if action not in ALLOWED_ACTIONS:
+    if action == "error":
+        print("\nAgent could not finish the diagnosis. Human investigation needed.")
+    elif action not in ALLOWED_ACTIONS:
         print("\nNo action proposed. Nothing was changed.")
     elif ask_approval(action):
         print(execute(action))
