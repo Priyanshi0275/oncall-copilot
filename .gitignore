@@ -3,3 +3,4 @@ venv/
 .chroma/
 app.log
 audit.db
+__pycache__/
