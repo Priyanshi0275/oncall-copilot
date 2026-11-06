@@ -54,7 +54,12 @@ def record_decision(incident_id: int, status: str, decided_by: str, result: str 
         )
         return cursor.rowcount == 1
 
-
+def record_decision_result(incident_id: int, result: str) -> None:
+    """Attach the outcome of an approved action to its incident."""
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE incidents SET result = ? WHERE id = ?", (result, incident_id)
+        )
 def list_incidents(limit: int = 50) -> list[dict]:
     with _connect() as conn:
         rows = conn.execute(
