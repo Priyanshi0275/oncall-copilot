@@ -107,7 +107,8 @@ def _run_tool(name: str, raw_arguments: str) -> str:
         args = json.loads(raw_arguments or "{}")
         args = {k: v for k, v in args.items() if v is not None}
         return func(**args)
-    except Exception as exc:  # report the failure to the model instead of crashing
+    # Report the failure to the model instead of crashing the agent.
+    except Exception as exc:  # noqa: BLE001
         return f"Tool {name} failed: {exc}"
 
 

@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import FastAPI, HTTPException
 
 logging.basicConfig(

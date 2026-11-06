@@ -1,5 +1,5 @@
 import os
-import threading
+import time
 
 from dotenv import load_dotenv
 from slack_bolt import App
@@ -94,8 +94,6 @@ def on_reject(ack, body):
 
 
 if __name__ == "__main__":
-    import time
-
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     handler.connect()  # listen for button clicks in the background
     post_incident("ALERT: /checkout is returning HTTP 500 errors.")
