@@ -2,7 +2,6 @@
 
 **An AI assistant that investigates software outages and suggests the fix, but never changes anything without a human saying yes.**
 
-![Dashboard showing an approved incident](docs/dashboard.png)
 
 ## The problem, in plain words
 
